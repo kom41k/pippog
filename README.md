@@ -1,2 +1,2 @@
 # pippog
-this game lika a shit
+this game like a shit
