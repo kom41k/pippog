@@ -1,0 +1,129 @@
+from pygame import *
+'''Необходимые классы'''
+
+
+#класс-родитель для спрайтов
+class GameSprite(sprite.Sprite):
+   def __init__(self, player_image, player_x, player_y, player_speed, wight, height):
+       super().__init__()
+       self.image = transform.scale(image.load(player_image), (wight, height)) #вместе 55,55 - параметры
+       self.speed = player_speed
+       self.rect = self.image.get_rect()
+       self.rect.x = player_x
+       self.rect.y = player_y
+
+
+   def reset(self):
+       window.blit(self.image, (self.rect.x, self.rect.y))
+
+
+class Player(GameSprite):
+   def update_r(self):
+       keys = key.get_pressed()
+       if keys[K_UP] and self.rect.y > 5:
+           self.rect.y -= self.speed
+       if keys[K_DOWN] and self.rect.y < win_height - 80:
+           self.rect.y += self.speed
+   def update_l(self):
+       keys = key.get_pressed()
+       if keys[K_w] and self.rect.y > 5:
+           self.rect.y -= self.speed
+       if keys[K_s] and self.rect.y < win_height - 80:
+           self.rect.y += self.speed
+
+class Bot(GameSprite):
+    def updateup2(self):
+        if racket2.rect.centery < 20 + ball.rect.y:
+            self.rect.y += self.speed
+    def updatedown2(self):
+        if racket2.rect.centery > 20 + ball.rect.y:
+            self.rect.y -= self.speed
+    def updateup1(self):
+        if racket1.rect.centery < 20 + ball.rect.y:
+            self.rect.y += self.speed
+    def updatedown1(self):
+        if racket1.rect.centery > 20 + ball.rect.y:
+            self.rect.y -= self.speed
+    def sbros(self):
+        self.rect.y = 185
+
+
+#игровая сцена:
+back = (0, 255, 0) #цвет фона (background)
+win_width = 600
+win_height = 500
+window = display.set_mode((win_width, win_height))
+window.fill(back)
+
+
+#флаги, отвечающие за состояние игры
+game = True
+finish = False
+clock = time.Clock()
+FPS = 60
+score1 = 0
+score2 = 0
+#создания мяча и ракетки   
+racket1 = Player('Красный.png', 30, 200, 4, 50, 150) 
+racket2 = Bot('Синий.png', 520, 200, 4, 50, 150)
+ball = GameSprite('ball.jfif', 200, 200, 4, 50, 50)
+
+
+font.init()
+font = font.Font(None, 35)
+count1 = font.render('player1 goals:' + str(score1), True, (180, 0, 0))
+count2 = font.render('player2 goals:' + str(score2), True, (180, 0, 0))
+
+speed_x = 3
+speed_y = 3
+
+
+while game:
+    for e in event.get():
+        if e.type == QUIT:
+            game = False
+
+    if finish != True:
+        window.fill(back)
+        racket1.update_l()
+        ball.rect.x += speed_x
+        ball.rect.y += speed_y
+        count1 = font.render('player1 goals:' + str(score1), True, (180, 0, 0))
+        count2 = font.render('player2 goals:' + str(score2), True, (180, 0, 0))
+        if racket2.rect.centery > 50 + ball.rect.y and racket2.rect.y > 34: #############
+            racket2.updatedown2()
+        if racket2.rect.centery < 50 + ball.rect.y and racket2.rect.y < win_height - 100: #############
+            racket2.updateup2()
+
+
+
+        if sprite.collide_rect(racket1, ball) or sprite.collide_rect(racket2, ball):
+            speed_x *= -1
+            speed_y *= 1
+
+        #если мяч достигает границ экрана, меняем направление его движения
+        if ball.rect.y > win_height-50 or ball.rect.y < 0:
+            speed_y *= -1
+
+
+        #если мяч улетел дальше ракетки, выводим условие проигрыша для первого игрока
+        if ball.rect.x < 0:
+            ball.rect.x = win_width/2
+            score2 += 1
+
+            count2 = font.render('player2 goals:' + str(score2), True, (180, 0, 0))
+
+
+        #если мяч улетел дальше ракетки, выводим условие проигрыша для второго игрока
+        if ball.rect.x > win_width:
+            ball.rect.x = win_width/2
+            score1 += 1
+            count1 = font.render('player1 goals:' + str(score1), True, (180, 0, 0))
+        racket1.reset()
+        racket2.reset()
+        ball.reset()
+        window.blit(count1, (0, 0))
+        window.blit(count2, (400, 0))
+
+    display.update()
+    clock.tick(FPS)
